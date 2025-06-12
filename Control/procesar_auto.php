@@ -1,0 +1,228 @@
+<?php
+require 'config.php';
+require 'vendor/autoload.php';   // PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+$db         = getDb();
+$mailCfg    = require 'mail_config.php';
+$cookieFile = __DIR__ . '/edx_cookies.txt';
+
+// ——————————————————————————
+// 1) HOST/Scheme EXACTO
+// ——————————————————————————
+$baseUrl   = 'http://local.openedx.io';
+$rootUrl   = $baseUrl . '/';
+$loginApi  = $baseUrl . '/api/user/v1/account/login_session/';
+$enrollApi = $baseUrl . '/api/enrollment/v1/enrollment';
+
+// ——————————————————————————
+// 2) Extrae CSRF de cookies
+// ——————————————————————————
+function getCsrf(string $cookieFile): string {
+    if (!file_exists($cookieFile)) return '';
+    foreach (file($cookieFile, FILE_IGNORE_NEW_LINES) as $line) {
+        if (preg_match('/\tcsrftoken\t([^\t]+)$/', $line, $m)) {
+            return $m[1];
+        }
+    }
+    return '';
+}
+
+// ——————————————————————————
+// 3) Leer ID
+// ——————————————————————————
+$id = $_GET['id'] ?? null;
+if (!$id) exit('ID de usuario no especificado');
+
+// ——————————————————————————
+// 4) GET inicial (cookies + CSRF)
+// ——————————————————————————
+$ch = curl_init($rootUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIEJAR      => $cookieFile,
+    CURLOPT_COOKIEFILE     => $cookieFile,
+]);
+curl_exec($ch);
+curl_close($ch);
+
+$csrf = getCsrf($cookieFile);
+if (!$csrf) die('No se encontró CSRF inicial.');
+
+// ——————————————————————————
+// 5) LOGIN admin
+// ——————————————————————————
+$loginQry = http_build_query([
+    'email'    => 'admin@academus.mx',
+    'password' => 'Academus2025#',
+]);
+$ch = curl_init($loginApi);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIEJAR      => $cookieFile,
+    CURLOPT_COOKIEFILE     => $cookieFile,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => $loginQry,
+    CURLOPT_HTTPHEADER     => [
+        "X-CSRFToken: $csrf",
+        "Referer: $rootUrl",
+        'Content-Type: application/x-www-form-urlencoded',
+    ],
+]);
+$resp = curl_exec($ch);
+$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+if ($code !== 200) die("Login falló: HTTP $code → $resp");
+
+// ——————————————————————————
+// 6) Refrescar CSRF tras login
+// ——————————————————————————
+$ch = curl_init($rootUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIEJAR      => $cookieFile,
+    CURLOPT_COOKIEFILE     => $cookieFile,
+]);
+curl_exec($ch);
+curl_close($ch);
+
+$csrf = getCsrf($cookieFile);
+if (!$csrf) die('No se encontró CSRF tras login.');
+
+// ——————————————————————————
+// 7) Alta de usuario
+// ——————————————————————————
+$stmt = $db->prepare('SELECT * FROM usuarios WHERE id = ?');
+$stmt->execute([$id]);
+$usr = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$usr) exit('Usuario no encontrado');
+
+$username = $usr['username']; // Usa el username de tu BD para evitar problemas de duplicados
+
+$data = [
+    'username'         => $username,
+    'password'         => $usr['password_plain'],
+    'email'            => $usr['correo'],
+    'name'             => $usr['nombre'] . ' ' . $usr['apellido'],
+    'country'          => 'MX',
+    'honor_code'       => true,
+    'terms_of_service' => true,
+];
+$ch = curl_init($baseUrl . '/api/user/v1/account/registration/');
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIEJAR      => $cookieFile,
+    CURLOPT_COOKIEFILE     => $cookieFile,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => http_build_query($data),
+    CURLOPT_HTTPHEADER     => [
+        "X-CSRFToken: $csrf",
+        "Referer: $rootUrl",
+        'Content-Type: application/x-www-form-urlencoded',
+    ],
+]);
+$res = curl_exec($ch);
+$st  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+$successAlta = false;
+if (($st >= 200 && $st < 300) || ($st === 409 && strpos($res, 'duplicate-email')!==false)) {
+    $db->prepare('UPDATE usuarios SET alta=1 WHERE id=?')->execute([$id]);
+    $successAlta = true;
+} else {
+    $db->prepare('UPDATE usuarios SET alta=0, asignado=0, notificado=0, error_message=? WHERE id=?')
+       ->execute(["HTTP $st: $res", $id]);
+}
+
+// ——————————————————————————
+// 8) Inscripción al curso (JSON, igual que en el manual)
+// ——————————————————————————
+$successAsign = false;
+if ($successAlta) {
+    // Refresca CSRF
+    $ch = curl_init($rootUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_COOKIEJAR      => $cookieFile,
+        CURLOPT_COOKIEFILE     => $cookieFile,
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+    $csrf = getCsrf($cookieFile);
+
+    $enrollData = [
+        'user'           => $username,
+        'course_details' => [
+            'course_id' => 'course-v1:Preescolar+CAD001+2025_MAR',
+            'mode'      => 'honor',
+        ],
+    ];
+    $payload = json_encode($enrollData);
+
+    $ch = curl_init($enrollApi);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_COOKIEJAR      => $cookieFile,
+        CURLOPT_COOKIEFILE     => $cookieFile,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => [
+            "X-CSRFToken: $csrf",
+            "Referer: $enrollApi",
+            'Content-Type: application/json',
+        ],
+    ]);
+    $res = curl_exec($ch);
+    $st  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($st >= 200 && $st < 300) {
+        $db->prepare('UPDATE usuarios SET asignado=1 WHERE id=?')->execute([$id]);
+        $successAsign = true;
+    } else {
+        $db->prepare('UPDATE usuarios SET asignado=0, notificado=0, error_message=? WHERE id=?')
+           ->execute(["HTTP $st: $res", $id]);
+    }
+}
+
+// ——————————————————————————
+// 9) Notificación por mail (si asign OK)
+// ——————————————————————————
+if ($successAsign) {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = $mailCfg['smtp']['host'];
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $mailCfg['smtp']['username'];
+        $mail->Password   = $mailCfg['smtp']['password'];
+        $mail->SMTPSecure = $mailCfg['smtp']['encryption'];
+        $mail->Port       = $mailCfg['smtp']['port'];
+
+        $mail->setFrom($mailCfg['smtp']['from_email'], $mailCfg['smtp']['from_name']);
+        $mail->addAddress($usr['correo'], $usr['nombre'].' '.$usr['apellido']);
+        $mail->isHTML(false);
+        $mail->Subject = 'Credenciales Open edX';
+        $mail->Body    = "Usuario: {$username}\nContraseña: {$usr['password_plain']}";
+        $mail->send();
+
+        $db->prepare('UPDATE usuarios SET notificado=1 WHERE id=?')->execute([$id]);
+    } catch (Exception $e) {
+        $db->prepare('UPDATE usuarios SET notificado=0, error_message=? WHERE id=?')
+           ->execute([$mail->ErrorInfo, $id]);
+    }
+}
+
+// ——————————————————————————
+// 10) Redirigir al panel
+// ——————————————————————————
+header('Location: admin_panel.php');
+exit;
