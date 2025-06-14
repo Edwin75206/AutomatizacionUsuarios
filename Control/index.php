@@ -74,10 +74,9 @@
       </label>
       <label>Curso:
         <select name="curso">
-          <option value="1">Primaria 1°</option>
-          <option value="2">Primaria 2°</option>
-          <option value="3">Primaria 3°</option>
-        </select>
+  <option value="1° Primaria">1° Primaria</option>
+<option value="2° Primaria">2° Primaria</option>
+</select>
       </label>
       <button type="submit">Guardar en Control</button>
     </form>

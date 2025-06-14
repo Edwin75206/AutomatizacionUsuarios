@@ -7,7 +7,8 @@ define('MIN_COURSE', 1);
 $nombre   = trim($_POST['nombre']   ?? '');
 $apellido = trim($_POST['apellido'] ?? '');
 $correo   = trim($_POST['correo']   ?? '');
-$curso    = intval($_POST['curso']  ?? MIN_COURSE);
+$curso = trim($_POST['curso'] ?? '');
+
 
 // Generar username y password aleatoria
 $username        = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $nombre . $apellido)) . rand(100, 999);
