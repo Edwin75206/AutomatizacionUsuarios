@@ -62,7 +62,7 @@
     <button class="btn nuevo" type="submit">NUEVO REGISTRO</button>
   </form>
 
-  <form action="ver_listado.php" method="get">
+  <form action="listado.php" method="get">
     <button class="btn listado" type="submit">VER LISTADO</button>
   </form>
 
