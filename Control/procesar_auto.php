@@ -87,7 +87,7 @@ if (($st >= 200 && $st < 300) || ($st === 409 && strpos($res, 'duplicate-email')
 } else {
     $db->prepare('UPDATE usuarios SET alta=0, asignado=0, notificado=0, error_message=? WHERE id=?')
         ->execute(["HTTP $st: $res", $id]);
-    header('Location: admin_panel.php');
+    header('Location: panelparasoporteregistro2025.php');
     exit;
 }
 
@@ -156,7 +156,7 @@ if ($successAlta) {
     if (!$course_id) {
         $db->prepare('UPDATE usuarios SET asignado=0, notificado=0, error_message=? WHERE id=?')
             ->execute(["Curso no reconocido: $nombreCurso", $id]);
-        header('Location: admin_panel.php');
+        header('Location: panelparasoporteregistro2025.php');
         exit;
     }
 
@@ -216,33 +216,35 @@ if ($successAsign) {
         $nombreCompleto = $usr['nombre'] . ' ' . $usr['apellido'];
         $correoUsuario = $usr['correo'];
         $contrasena = $usr['password_plain'];
+        $username = $usr['username'];
 
         $mail->Body = "
-    <p>Estimado(a) <strong>$nombreCompleto</strong>,</p>
+    <p>👋 Estimado(a) <strong>$nombreCompleto</strong>,</p>
 
-    <p>¡Bienvenido(a) a nuestra plataforma de aprendizaje en línea <strong>Academus Digital</strong>!</p>
+    <p>🎓 ¡Bienvenido(a) a nuestra plataforma de aprendizaje en línea <strong>Academus Digital</strong>!</p>
 
     <p>Nos da mucho gusto que formes parte de esta comunidad comprometida con el crecimiento y la formación continua. 
-    A partir de ahora, tendrás acceso a contenidos diseñados para potenciar tu desarrollo y alcanzar tus metas de aprendizaje.</p>
+    A partir de ahora, tendrás acceso a contenidos diseñados para potenciar tu desarrollo y alcanzar tus metas de aprendizaje. 🚀</p>
 
-    <p><strong>A continuación, te compartimos tus datos de acceso:</strong></p>
+    <p><strong>🔐 A continuación, te compartimos tus datos de acceso:</strong></p>
     <ul>
-        <li><strong>Usuario:</strong> $correoUsuario</li>
-        <li><strong>Contraseña temporal:</strong> $contrasena</li>
-        <li><strong>Enlace de acceso:</strong> <a href='https://app.academusdigital.com'>https://app.academusdigital.com</a></li>
+        <li>👤 <strong>Usuario:</strong> $username</li>
+        <li>📧 <strong>Correo:</strong> $correoUsuario</li>
+        <li>🔑 <strong>Contraseña temporal:</strong> $contrasena</li>
+        <li>🌐 <strong>Enlace de acceso:</strong> <a href='https://app.academusdigital.com'>https://app.academusdigital.com</a></li>
     </ul>
 
-    <p>Para ayudarte en tu primer ingreso, hemos preparado una breve guía con instrucciones paso a paso. 
-    Puedes verla en el siguiente enlace:</p>
+    <p>ℹ️ <strong>Recuerda que puedes iniciar sesión usando tu <u>nombre de usuario</u> o <u>correo electrónico</u>.</strong></p>
 
     <p>📄 <strong>Guía de acceso:</strong> (inserta aquí el enlace real a la guía)</p>
 
-    <p>Por favor, te recomendamos cambiar tu contraseña al ingresar por primera vez. 
-    Si tienes alguna duda o dificultad técnica, no dudes en escribirnos.</p>
+    <p>🔁 Por favor, te recomendamos cambiar tu contraseña al ingresar por primera vez. 
+    Si tienes alguna duda o dificultad técnica, no dudes en escribirnos. 💬</p>
 
-    <p>Saludos cordiales,<br>
-    <strong>Academus Digital</strong></p>
+    <p>Un saludo cordial,<br>
+    💙 <strong>Equipo de Academus Digital</strong></p>
 ";
+
         $mail->send();
 
         $db->prepare('UPDATE usuarios SET notificado=1 WHERE id=?')->execute([$id]);

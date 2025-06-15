@@ -226,5 +226,5 @@ if ($act === 'notif' && !empty($_POST['notif_ids'])) {
 // ——————————————————————————
 // 7) Redirigir al panel
 // ——————————————————————————
-header('Location: admin_panel.php');
+header('Location: panelparasoporteregistro2025.php');
 exit;

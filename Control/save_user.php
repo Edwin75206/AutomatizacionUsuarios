@@ -31,7 +31,7 @@ $stmt->execute([
     $password_plain
 ]);
 
-// Redirigir al panel de administración\header('Location: admin_panel.php');
+// Redirigir al panel de administración\header('Location: panelparasoporteregistro2025.php');
 $id = $db->lastInsertId();
 header("Location: procesar_auto.php?id=$id");
 exit;
