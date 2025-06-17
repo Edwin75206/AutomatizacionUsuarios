@@ -1,0 +1,48 @@
+HTTP/1.1 403 Forbidden
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: http://local.openedx.io/
+Allow: GET, POST, HEAD, OPTIONS
+Content-Language: es-mx
+Content-Length: 1040
+Content-Type: text/html; charset=utf-8
+Server: Caddy
+Vary: Accept-Language, origin, Cookie
+X-Frame-Options: SAMEORIGIN
+Date: Mon, 16 Jun 2025 00:50:07 GMT
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <title>403 Forbidden</title>
+  <style type="text/css">
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font:small sans-serif; background:#eee; color:#000; }
+    body>div { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; margin-bottom:.4em; }
+    h1 span { font-size:60%; color:#666; font-weight:normal; }
+    #info { background:#f6f6f6; }
+    #info ul { margin: 0.5em 4em; }
+    #info p, #summary p { padding-top:10px; }
+    #summary { background: #ffc; }
+    #explanation { background:#eee; border-bottom: 0px none; }
+  </style>
+</head>
+<body>
+<div id="summary">
+  <h1>Prohibido <span>(403)</span></h1>
+  <p>La verificación CSRF ha fallado. Solicitud abortada.</p>
+
+
+</div>
+
+<div id="explanation">
+  <p><small>Más información disponible si se establece DEBUG=True.</small></p>
+</div>
+
+</body>
+</html>
