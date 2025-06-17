@@ -54,6 +54,10 @@
       <div class="alert-error">
         El correo ingresado no tiene un formato válido.
       </div>
+    <?php elseif (!empty($_GET['error']) && $_GET['error'] === 'duplicate'): ?>
+      <div class="alert-error">
+        Ese usuario ya existe.
+      </div>
     <?php endif; ?>
 
     <form id="registerForm" action="save_user.php" method="post">

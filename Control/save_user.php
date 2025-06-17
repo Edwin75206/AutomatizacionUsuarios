@@ -9,6 +9,14 @@ $apellido = trim($_POST['apellido'] ?? '');
 $correo   = trim($_POST['correo']   ?? '');
 $curso = trim($_POST['curso'] ?? '');
 
+// Verificar duplicados (mismo nombre completo, correo y curso)
+$dupStmt = $db->prepare('SELECT COUNT(*) FROM usuarios WHERE nombre=? AND apellido=? AND correo=? AND curso=?');
+$dupStmt->execute([$nombre, $apellido, $correo, $curso]);
+if ($dupStmt->fetchColumn() > 0) {
+    header('Location: index.php?error=duplicate');
+    exit;
+}
+
 
 // Generar username y password aleatoria
 $username        = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $nombre . $apellido)) . rand(100, 999);
