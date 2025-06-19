@@ -6,7 +6,7 @@ $mailCfg = require 'mail_config.php';
 $cookieFile = __DIR__ . '/edx_cookies.txt';
 
 // ——————————————————————————
-// 1) Configura tu HOST/Scheme EXACTO
+// 1) Configura el HOST
 // ——————————————————————————
 $baseUrl   = 'http://local.openedx.io';
 $rootUrl   = $baseUrl . '/';
@@ -71,7 +71,7 @@ curl_close($ch);
 if ($code !== 200) die("Login falló: HTTP $code → $resp");
 
 // ——————————————————————————
-// 5) Refresca CSRF tras login (nuevo GET)
+// 5) Refresca CSRF tras login
 // ——————————————————————————
 $ch = curl_init($rootUrl);
 curl_setopt_array($ch, [

@@ -75,12 +75,12 @@ if ($esDuplicado) {
     }
     // 2. Actualizar correo en BD de control
     $db->prepare('UPDATE usuarios SET correo = ? WHERE id = ?')->execute([$nuevoCorreo, $id]);
-    // 3. Tomar datos del primer registro (usuario ya existente en Open edX)
+    // 3. Tomar datos del primer registro (usuario ya existente)
     $usernameOriginal = $primerRegistro['username'];
     $correoOriginal = $primerRegistro['correo'];
     $contrasenaOriginal = $primerRegistro['password_plain'];
 
-    // 4. LOGIN admin para obtener CSRF limpio (ajustado con headers)
+    // 4. LOGIN admin para obtener CSRF limpio 
     unlink($cookieFile);
 
     // Primera llamada para generar cookies
@@ -160,7 +160,7 @@ if ($esDuplicado) {
     $mapCursos = [
         '1° Primaria' => 'course-v1:Preescolar+CAD001+2025_MAR',
         '2° Primaria' => 'course-v1:Unimec+CAD001+2025_MAR',
-        // ... agrega todos los cursos necesarios
+        // ... agregar todos los cursos 
     ];
     $nombreCurso = $usr['curso'] ?? '';
     $course_id = $mapCursos[$nombreCurso] ?? null;
@@ -208,7 +208,7 @@ if ($esDuplicado) {
             ->execute(["HTTP $st: $res", $id]);
     }
 
-    // 8. Notificar al padre/hijo con los DATOS DEL USUARIO ORIGINAL
+    // 8. Notifica con los DATOS DEL USUARIO ORIGINAL
     if ($successAsign) {
         $mail = new PHPMailer(true);
         try {
@@ -243,7 +243,7 @@ if ($esDuplicado) {
         </ul>
 
         <p>ℹ️ <strong>Recuerda que puedes iniciar sesión usando tu <u>nombre de usuario</u> o <u>correo electrónico</u>.</strong></p>
-        <p>📄 <strong>Guía de acceso:</strong> (inserta aquí el enlace real a la guía)</p>
+        <p>📄 <strong>Guía de acceso:</strong></p>
         <p>🔁 Por favor, te recomendamos cambiar tu contraseña al ingresar por primera vez. 
         Si tienes alguna duda o dificultad técnica, no dudes en escribirnos. 💬</p>
 

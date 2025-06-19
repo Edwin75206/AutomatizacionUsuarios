@@ -1,5 +1,4 @@
 <?php
-// listado.php
 require_once './config.php';
 
 try {
