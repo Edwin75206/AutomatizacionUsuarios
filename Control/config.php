@@ -1,9 +1,10 @@
 <?php
-// Parámetros de conexión a MySQL (XAMPP)
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'control_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+// config.php — Parámetros de conexión a MySQL (Servidor remoto)
+define('DB_HOST', 'mysql.academusdigital.com');
+define('DB_NAME', 'academcontrol');  
+define('DB_USER', 'academusdigitalc');
+define('DB_PASS', 'yc3?L**7');
+define('DB_PORT', 3306);
 
 /**
  * Obtiene una conexión PDO con el modo de errores en excepciones.
@@ -12,7 +13,13 @@ define('DB_PASS', '');
  */
 function getDb(): PDO
 {
-    $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', DB_HOST, DB_NAME);
+    $dsn = sprintf(
+        'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
+        DB_HOST,
+        DB_PORT,
+        DB_NAME
+    );
+
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -21,4 +28,3 @@ function getDb(): PDO
         die('Error al conectar con la base de datos: ' . $e->getMessage());
     }
 }
-?>

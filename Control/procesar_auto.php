@@ -8,7 +8,7 @@ $db = getDb();
 $mailCfg = require 'mail_config.php';
 $cookieFile = __DIR__ . '/edx_cookies.txt';
 
-$baseUrl = 'http://local.openedx.io';
+$baseUrl = 'https://app.academusdigital.com';
 $rootUrl = $baseUrl . '/';
 $loginApi = $baseUrl . '/api/user/v1/account/login_session/';
 $enrollApi = $baseUrl . '/api/enrollment/v1/enrollment';
@@ -119,23 +119,20 @@ if ($esDuplicado) {
         die('No se encontró CSRF tras limpiar cookies.');
     }
 
-    // 5. LOGIN admin
-    $loginQry = http_build_query([
-        'email' => 'admin@academus.mx',
-        'password' => 'Academus2025#',
-    ]);
-    $ch = curl_init($loginApi);
+    // 1) Arma el array con username (no email) y contraseña
+    $loginData = [
+        'username' => 'sysadmin',
+        'password' => 'admin@academus2025',
+    ];
+
+    // 2) JSON-encode y envíalo como JSON
+    $payload = json_encode($loginData);
     curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_COOKIEJAR => $cookieFile,
-        CURLOPT_COOKIEFILE => $cookieFile,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $loginQry,
+        CURLOPT_POSTFIELDS => $payload,
         CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
             "X-CSRFToken: $csrf",
             "Referer: $rootUrl",
-            'Content-Type: application/x-www-form-urlencoded',
         ],
     ]);
     $resp = curl_exec($ch);
@@ -158,8 +155,8 @@ if ($esDuplicado) {
 
     // 7. Enrolar al curso SOLO usando el usuario original
     $mapCursos = [
-        '1° Primaria' => 'course-v1:Preescolar+CAD001+2025_MAR',
-        '2° Primaria' => 'course-v1:Unimec+CAD001+2025_MAR',
+        '1° Primaria' => 'course-v1:Primaria+CPRIAD001+2025_MAR',
+        '2° Primaria' => 'course-v1:Primaria+CPRIAD002+2025_MAR',
         // ... agregar todos los cursos 
     ];
     $nombreCurso = $usr['curso'] ?? '';
@@ -333,23 +330,20 @@ $csrf = getCsrf($cookieFile);
 if (!$csrf)
     die('No se encontró CSRF tras limpiar cookies.');
 
-// 5. LOGIN admin
-$loginQry = http_build_query([
-    'email' => 'admin@academus.mx',
-    'password' => 'Academus2025#',
-]);
-$ch = curl_init($loginApi);
+// 1) Arma el array con username (no email) y contraseña
+$loginData = [
+    'username' => 'sysadmin',
+    'password' => 'admin@academus2025',
+];
+
+// 2) JSON-encode y envíalo como JSON
+$payload = json_encode($loginData);
 curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_COOKIEJAR => $cookieFile,
-    CURLOPT_COOKIEFILE => $cookieFile,
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => $loginQry,
+    CURLOPT_POSTFIELDS => $payload,
     CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
         "X-CSRFToken: $csrf",
         "Referer: $rootUrl",
-        'Content-Type: application/x-www-form-urlencoded',
     ],
 ]);
 $resp = curl_exec($ch);
@@ -374,8 +368,8 @@ $csrf = getCsrf($cookieFile);
 $successAsign = false;
 if ($successAlta) {
     $mapCursos = [
-        '1° Primaria' => 'course-v1:Preescolar+CAD001+2025_MAR',
-        '2° Primaria' => 'course-v1:Unimec+CAD001+2025_MAR',
+        '1° Primaria' => 'course-v1:Primaria+CPRIAD001+2025_MAR',
+        '2° Primaria' => 'course-v1:Primaria+CPRIAD002+2025_MAR',
         // ... agrega los demás cursos aquí
     ];
     $nombreCurso = $usr['curso'] ?? '';
