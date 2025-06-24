@@ -119,20 +119,23 @@ if ($esDuplicado) {
         die('No se encontró CSRF tras limpiar cookies.');
     }
 
-    // 1) Arma el array con username (no email) y contraseña
-    $loginData = [
-        'username' => 'sysadmin',
+    // 5. LOGIN admin
+    $loginQry = http_build_query([
+        'email' => 'admin@academusdigital',
         'password' => 'admin@academus2025',
-    ];
-
-    // 2) JSON-encode y envíalo como JSON
-    $payload = json_encode($loginData);
+    ]);
+    $ch = curl_init($loginApi);
     curl_setopt_array($ch, [
-        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_COOKIEJAR => $cookieFile,
+        CURLOPT_COOKIEFILE => $cookieFile,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $loginQry,
         CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
             "X-CSRFToken: $csrf",
             "Referer: $rootUrl",
+            'Content-Type: application/x-www-form-urlencoded',
         ],
     ]);
     $resp = curl_exec($ch);
@@ -261,7 +264,31 @@ if ($esDuplicado) {
 } // FIN DEL IF DUPLICADO
 
 // ----- SI NO ES DUPLICADO, PROCESO NORMAL -----
+@unlink($cookieFile);
+$ch = curl_init($rootUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIEJAR => $cookieFile,
+    CURLOPT_COOKIEFILE => $cookieFile,
+]);
+curl_exec($ch);
+curl_close($ch);
 
+$ch = curl_init($rootUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_COOKIEJAR => $cookieFile,
+    CURLOPT_COOKIEFILE => $cookieFile,
+]);
+curl_exec($ch);
+curl_close($ch);
+
+$csrf = getCsrf($cookieFile);
+if (!$csrf) {
+    die('No se encontró CSRF tras limpiar cookies.');
+}
 // 2. GET inicial (cookies + CSRF)
 $ch = curl_init($rootUrl);
 curl_setopt_array($ch, [
@@ -364,58 +391,82 @@ curl_exec($ch);
 curl_close($ch);
 $csrf = getCsrf($cookieFile);
 
-// 7. Inscripción al curso
-$successAsign = false;
-if ($successAlta) {
-    $mapCursos = [
-        '1° Primaria' => 'course-v1:Primaria+CPRIAD001+2025_MAR',
-        '2° Primaria' => 'course-v1:Primaria+CPRIAD002+2025_MAR',
-        // ... agrega los demás cursos aquí
-    ];
-    $nombreCurso = $usr['curso'] ?? '';
-    $course_id = $mapCursos[$nombreCurso] ?? null;
+// 7. Enrolar primero al curso dinámico y luego al de Biblioteca
+$fixedLibraryCourse = 'course-v1:Unimec+CBIBAD001+2025_ABR';
 
-    if (!$course_id) {
-        $db->prepare('UPDATE usuarios SET asignado=0, notificado=0, error_message=? WHERE id=?')
-            ->execute(["Curso no reconocido: $nombreCurso", $id]);
-        header('Location: panelparasoporteregistro2025.php');
-        exit;
-    }
+// Curso dinámico según grado
+$mapCursos = [
+    '1° Primaria' => 'course-v1:Primaria+CPRIAD001+2025_MAR',
+    '2° Primaria' => 'course-v1:Primaria+CPRIAD002+2025_MAR',
+    // ... tus demás cursos
+];
+$nombreCurso = $usr['curso'] ?? '';
+$dynamicCourse = $mapCursos[$nombreCurso] ?? null;
 
-    $enrollData = [
-        'user' => $username,
-        'course_details' => [
-            'course_id' => $course_id,
-            'mode' => 'honor',
-        ],
-    ];
-    $payload = json_encode($enrollData);
+if (!$dynamicCourse) {
+    $db->prepare(
+        'UPDATE usuarios SET asignado=0, notificado=0, error_message=? WHERE id=?'
+    )->execute(["Curso no reconocido: $nombreCurso", $id]);
+    header('Location: panelparasoporteregistro2025.php');
+    exit;
+}
 
-    $ch = curl_init($enrollApi);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_COOKIEJAR => $cookieFile,
-        CURLOPT_COOKIEFILE => $cookieFile,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_HTTPHEADER => [
-            "X-CSRFToken: $csrf",
-            "Referer: $enrollApi",
-            'Content-Type: application/json',
-        ],
-    ]);
-    $res = curl_exec($ch);
-    $st = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+// a) Enrol dinámico
+$enrollData1 = [
+    'user' => $usernameOriginal,
+    'course_details' => ['course_id' => $dynamicCourse, 'mode' => 'honor'],
+];
+$payload1 = json_encode($enrollData1);
+$ch = curl_init($enrollApi);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_COOKIEJAR => $cookieFile,
+    CURLOPT_COOKIEFILE => $cookieFile,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $payload1,
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        "X-CSRFToken: $csrf",
+        "Referer: $rootUrl",
+    ],
+]);
+$res1 = curl_exec($ch);
+$st1 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
 
-    if ($st >= 200 && $st < 300) {
-        $db->prepare('UPDATE usuarios SET asignado=1 WHERE id=?')->execute([$id]);
-        $successAsign = true;
-    } else {
-        $db->prepare('UPDATE usuarios SET asignado=0, notificado=0, error_message=? WHERE id=?')
-            ->execute(["HTTP $st: $res", $id]);
-    }
+// b) Enrol Biblioteca
+$enrollData2 = [
+    'user' => $usernameOriginal,
+    'course_details' => ['course_id' => $fixedLibraryCourse, 'mode' => 'honor'],
+];
+$payload2 = json_encode($enrollData2);
+$ch = curl_init($enrollApi);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_COOKIEJAR => $cookieFile,
+    CURLOPT_COOKIEFILE => $cookieFile,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $payload2,
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        "X-CSRFToken: $csrf",
+        "Referer: $rootUrl",
+    ],
+]);
+$res2 = curl_exec($ch);
+$st2 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+// c) Comprobar ambos
+if ($st1 >= 200 && $st1 < 300 && $st2 >= 200 && $st2 < 300) {
+    $db->prepare('UPDATE usuarios SET asignado=1 WHERE id=?')->execute([$id]);
+    $successAsign = true;
+} else {
+    $msg = "Dinámico: HTTP $st1 → $res1; Biblioteca: HTTP $st2 → $res2";
+    $db->prepare(
+        'UPDATE usuarios SET asignado=0, notificado=0, error_message=? WHERE id=?'
+    )->execute([$msg, $id]);
+    $successAsign = false;
 }
 
 // 8. Notificación por correo
