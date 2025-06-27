@@ -158,10 +158,24 @@ if ($esDuplicado) {
 
     // 7. Enrolar al curso SOLO usando el usuario original
     $mapCursos = [
-        '1° Primaria' => 'course-v1:Primaria+CPRIAD001+2025_MAR',
-        '2° Primaria' => 'course-v1:Primaria+CPRIAD002+2025_MAR',
-        // ... agregar todos los cursos 
-    ];
+    'Pre-Primaria'                  => 'course-v1:Primaria+CPRIAD000+2025_MAR',
+    '1° Primaria'                   => 'course-v1:Primaria+CPRIAD001+2025_MAR',
+    '2° Primaria'                   => 'course-v1:Primaria+CPRIAD002+2025_MAR',
+    '3° Primaria'                   => 'course-v1:Primaria+CPRIAD003+2025_MAR',
+    '4° Primaria'                   => 'course-v1:Primaria+CPRIAD004+2025_MAR',
+    '5° Primaria'                   => 'course-v1:Primaria+CPRIAD005+2025_MAR',
+    '6° Primaria'                   => 'course-v1:Primaria+CPRIAD006+2025_MAR',
+    '1° de Secundaria'             => 'course-v1:Secundaria+CPSECD001+2025',
+    '2° de Secundaria'             => 'course-v1:Secundaria+CPSECD002+2025',
+    '3° de Secundaria'             => 'course-v1:Secundaria+CPSECD003+2025',
+    'Preparatoria 1° Semestre'     => 'course-v1:Preparatoria+CPTECS001+2025',
+    'Preparatoria 2° Semestre'     => 'course-v1:Preparatoria+CPTECS002+2025',
+    'Preparatoria 3° Semestre'     => 'course-v1:Preparatoria+CPTECS003+2025',
+    'Preparatoria 4° Semestre'     => 'course-v1:Preparatoria+CPTECS004+2025',
+    'Preparatoria 5° Semestre'     => 'course-v1:Preparatoria+CPTECS005+2025',
+    'Preparatoria 6° Semestre'     => 'course-v1:Preparatoria+CPTECS006+2025',
+];
+
     $nombreCurso = $usr['curso'] ?? '';
     $course_id = $mapCursos[$nombreCurso] ?? null;
 
@@ -251,10 +265,21 @@ if ($esDuplicado) {
         💙 <strong>Equipo de Academus Digital</strong></p>
     ";
             $mail->send();
-            $db->prepare('UPDATE usuarios SET notificado=1 WHERE id=?')->execute([$id]);
+            // Marcamos como notificado y asignado
+            $db->prepare(
+                'UPDATE usuarios 
+            SET notificado = 1,
+                asignado   = 1 
+          WHERE id = ?'
+            )->execute([$id]);
         } catch (Exception $e) {
-            $db->prepare('UPDATE usuarios SET notificado=0, error_message=? WHERE id=?')
-                ->execute([$mail->ErrorInfo, $id]);
+            // Si falla el mail, notificado = 0, error_message se guarda
+            $db->prepare(
+                'UPDATE usuarios
+            SET notificado    = 0,
+                error_message = ? 
+          WHERE id = ?'
+            )->execute([$mail->ErrorInfo, $id]);
         }
     }
 
@@ -396,10 +421,24 @@ $fixedLibraryCourse = 'course-v1:Unimec+CBIBAD001+2025_ABR';
 
 // Curso dinámico según grado
 $mapCursos = [
-    '1° Primaria' => 'course-v1:Primaria+CPRIAD001+2025_MAR',
-    '2° Primaria' => 'course-v1:Primaria+CPRIAD002+2025_MAR',
-    // ... tus demás cursos
+    'Pre-Primaria'                  => 'course-v1:Primaria+CPRIAD000+2025_MAR',
+    '1° Primaria'                   => 'course-v1:Primaria+CPRIAD001+2025_MAR',
+    '2° Primaria'                   => 'course-v1:Primaria+CPRIAD002+2025_MAR',
+    '3° Primaria'                   => 'course-v1:Primaria+CPRIAD003+2025_MAR',
+    '4° Primaria'                   => 'course-v1:Primaria+CPRIAD004+2025_MAR',
+    '5° Primaria'                   => 'course-v1:Primaria+CPRIAD005+2025_MAR',
+    '6° Primaria'                   => 'course-v1:Primaria+CPRIAD006+2025_MAR',
+    '1° de Secundaria'             => 'course-v1:Secundaria+CPSECD001+2025',
+    '2° de Secundaria'             => 'course-v1:Secundaria+CPSECD002+2025',
+    '3° de Secundaria'             => 'course-v1:Secundaria+CPSECD003+2025',
+    'Preparatoria 1° Semestre'     => 'course-v1:Preparatoria+CPTECS001+2025',
+    'Preparatoria 2° Semestre'     => 'course-v1:Preparatoria+CPTECS002+2025',
+    'Preparatoria 3° Semestre'     => 'course-v1:Preparatoria+CPTECS003+2025',
+    'Preparatoria 4° Semestre'     => 'course-v1:Preparatoria+CPTECS004+2025',
+    'Preparatoria 5° Semestre'     => 'course-v1:Preparatoria+CPTECS005+2025',
+    'Preparatoria 6° Semestre'     => 'course-v1:Preparatoria+CPTECS006+2025',
 ];
+
 $nombreCurso = $usr['curso'] ?? '';
 $dynamicCourse = $mapCursos[$nombreCurso] ?? null;
 

@@ -162,10 +162,24 @@ if ($act === 'alta' && !empty($_POST['alta_ids'])) {
 // ——————————————————————————
 if ($act==='asign' && !empty($_POST['asign_ids'])) {
     $courseMap = [
-        '1° Primaria'=>'course-v1:Primaria+CPRIAD001+2025_MAR',
-        '2° Primaria'=>'course-v1:Primaria+CPRIAD002+2025_MAR',
-        // ...
-    ];
+    'Pre-Primaria'                  => 'course-v1:Primaria+CPRIAD000+2025_MAR',
+    '1° Primaria'                   => 'course-v1:Primaria+CPRIAD001+2025_MAR',
+    '2° Primaria'                   => 'course-v1:Primaria+CPRIAD002+2025_MAR',
+    '3° Primaria'                   => 'course-v1:Primaria+CPRIAD003+2025_MAR',
+    '4° Primaria'                   => 'course-v1:Primaria+CPRIAD004+2025_MAR',
+    '5° Primaria'                   => 'course-v1:Primaria+CPRIAD005+2025_MAR',
+    '6° Primaria'                   => 'course-v1:Primaria+CPRIAD006+2025_MAR',
+    '1° de Secundaria'             => 'course-v1:Secundaria+CPSECD001+2025',
+    '2° de Secundaria'             => 'course-v1:Secundaria+CPSECD002+2025',
+    '3° de Secundaria'             => 'course-v1:Secundaria+CPSECD003+2025',
+    'Preparatoria 1° Semestre'     => 'course-v1:Preparatoria+CPTECS001+2025',
+    'Preparatoria 2° Semestre'     => 'course-v1:Preparatoria+CPTECS002+2025',
+    'Preparatoria 3° Semestre'     => 'course-v1:Preparatoria+CPTECS003+2025',
+    'Preparatoria 4° Semestre'     => 'course-v1:Preparatoria+CPTECS004+2025',
+    'Preparatoria 5° Semestre'     => 'course-v1:Preparatoria+CPTECS005+2025',
+    'Preparatoria 6° Semestre'     => 'course-v1:Preparatoria+CPTECS006+2025',
+];
+
     $libCourse = 'course-v1:Unimec+CBIBAD001+2025_ABR';
     foreach ($_POST['asign_ids'] as $id) {
         $stmt = $db->prepare('SELECT * FROM usuarios WHERE id=?');

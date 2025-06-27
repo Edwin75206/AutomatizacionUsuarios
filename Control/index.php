@@ -129,10 +129,28 @@
         <input type="email" name="correo" required pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
           title="Introduce un correo con formato usuario@dominio.ext">
       </label>
+      <label>CURP:
+  <input type="text" name="curp" required pattern="[A-Z0-9]{18}"
+    title="Introduce una CURP válida de 18 caracteres en mayúsculas">
+</label>
       <label>Curso:
         <select name="curso">
+          <option value="Pre-Primaria">Pre-Primaria</option>
           <option value="1° Primaria">1° Primaria</option>
           <option value="2° Primaria">2° Primaria</option>
+          <option value="3° Primaria">3° Primaria</option>
+          <option value="4° Primaria">4° Primaria</option>
+          <option value="5° Primaria">5° Primaria</option>
+          <option value="6° Primaria">6° Primaria</option>
+          <option value="1° de Secundaria">1° de Secundaria</option>
+          <option value="2° de Secundaria">2° de Secundaria</option>
+          <option value="3° de Secundaria">3° de Secundaria</option>
+          <option value="Preparatoria 1° Semestre">Preparatoria 1° Semestre</option>
+          <option value="Preparatoria 2° Semestre">Preparatoria 2° Semestre</option>
+          <option value="Preparatoria 3° Semestre">Preparatoria 3° Semestre</option>
+          <option value="Preparatoria 4° Semestre">Preparatoria 4° Semestre</option>
+          <option value="Preparatoria 5° Semestre">Preparatoria 5° Semestre</option>
+          <option value="Preparatoria 6° Semestre">Preparatoria 6° Semestre</option>
         </select>
       </label>
       <button type="submit">Guardar en Control</button>
